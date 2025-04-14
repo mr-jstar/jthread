@@ -28,9 +28,10 @@ public class ParQueue<T> {
         while (n == 0) {
             wait();
         }
-        Object ret = t[0];
+        @SuppressWarnings("unchecked")
+        T ret = (T)t[0];
         moveAll();
-        return (T) ret;
+        return ret;
     }
 
     public boolean isEmpty() {
