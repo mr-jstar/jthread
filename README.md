@@ -1,4 +1,4 @@
-Menu:
+
      parReduction - równoległa redukcja wektora
          ParRed - uruchamia wątki, czeka aż skończą, pobiera i sumuje wyniki cząstkowe
          ParRedQ - wykorzystuje synchronizowaną kolejkę do zbierania wyników cząstkowych
