@@ -53,10 +53,10 @@ class JacobiPartSolverA extends Thread {
             for (int r = start; r < finish; r++) {
                 err += (x[r] - xp[r]) * (x[r] - xp[r]);
             }
-            if (Math.sqrt(err) <= eps) {
-                threadFinished[myNumber] = true;  // Główny może to zmienić
+            if (Math.sqrt(err*n/(finish-start)) <= eps) {  // Estymacja całego błędu na postawie fragmentu
+                threadFinished[myNumber] = true;  // Zapisujemy swój sygnał zakończenia - główny może to zmienić
             }
-            System.arraycopy(x, start, xp, start, (finish - start));
+            System.arraycopy(x, start, xp, start, (finish - start)); // uaktualniamy "swój" kawałek xp
             try {
                 firstBarrier.await();  // Czekamy aż główny odbierze
                 secondBarrier.await(); // Czakamy aż główny zdecyduje

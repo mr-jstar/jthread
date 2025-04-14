@@ -46,11 +46,11 @@ class JacobiPartSolverB extends Thread {
                 x[row] = xp[row] - x[row] / mA.get(row, row);
             }
             try {
-                firstBarrier.await();  // Czekamy aż główny odbierze
-                secondBarrier.await(); // Czakamy aż główny zdecyduje
+                firstBarrier.await();  // Czekamy aż wszyscy skończą
+                secondBarrier.await(); // Czakamy aż główny zdecyduje, co dalej
                 if (!theEnd[0]) {
                     //System.err.println("Thread#" + myNumber + " copying x -> xp");
-                    System.arraycopy(x, start, xp, start, (finish - start));
+                    System.arraycopy(x, start, xp, start, (finish - start)); // uaktualniamy "swój" kawałek xp
                 }
                 //System.err.println( "Thread#" + myNumber + " after secondBarrier");
             } catch (InterruptedException ex1) {
