@@ -13,7 +13,7 @@ public class ReadMe {
                                     ParRedQ - wykorzystuje synchronizowaną kolejkę do zbierania wyników cząstkowych
                                 
                                 parJacobi - równoległy algorytm iteracji prostych Jacobiego
-                                    JacobiSolver - buduje i rozwiązuje rzadki, zdominowany układ równań o zadanej wielkości
+                                    JacobiSolver - buduje i rozwiązuje rzadki, zdominowany diagonalnie układ równań o zadanej wielkości
                                                    porównuje rozwiązanie sekwencyjne z rozwiązaniem na tylu wątkach ile jest rdzeni
                                                    i z rozwiązaniem na połowie liczby rdzeni.
                            """);
