@@ -72,7 +72,13 @@ public class JacobiSolver {
                 for (int i = 0; i < nthreads; i++) {
                     allFinished = allFinished && threadFinished[i];
                 }
-                //printBool( threadFinished );
+                if (it == maxIt - 1) {
+                    allFinished = true;
+                    for (int i = 0; i < nthreads; i++) {
+                        threadFinished[i] = true;
+                    }
+                }
+                //printBool( threadFinished )
                 if (!allFinished) {
                     for (int i = 0; i < nthreads; i++) {
                         threadFinished[i] = false;
@@ -125,7 +131,7 @@ public class JacobiSolver {
                     err += (xp[i] - x[i]) * (xp[i] - x[i]);
                 }
                 //System.err.println( "It #" + it + " err=" + Math.sqrt(err) );
-                if (Math.sqrt(err) > eps) {
+                if (Math.sqrt(err) > eps && it < maxIt - 1) {
                     theEnd[0] = false;
                     //System.err.println("All workers should continue.");
                     bar2.await();
@@ -184,7 +190,7 @@ public class JacobiSolver {
         System.out.println("Sekwencyjnie:\n\tWykonano " + jacobi(mA, b, x0, n, 1e-9, x) + " iteracji");
         long end = System.nanoTime();
         long duration = end - start;
-        System.out.println("\tCzas wykonania: " + String.format("%.3f",duration / 1e6) + " milisekund");
+        System.out.println("\tCzas wykonania: " + String.format("%.3f", duration / 1e6) + " milisekund");
 
         if (n < 20) {
             for (int r = 0; r < n; r++) {
@@ -199,19 +205,25 @@ public class JacobiSolver {
         }
         double[] xp = new double[n];
         int cores = Runtime.getRuntime().availableProcessors();
+        int []p;
+        if( args.length > 1 ) {
+            p = new int[args.length-1];
+            for( int i= 1; i < args.length; i++ )
+                p[i-1] = Integer.parseInt(args[i]);
+        } else {
+            p = new int[2];
+            p[0] = cores/2;
+            p[1] = cores;
+        }
         System.out.println("Współbieżnie:");
-        System.out.println("\t" + cores + " wątk" + (cores < 5 ? "i" : "ów") + ":");
-        start = System.nanoTime();
-        System.out.println("\t\tWykonano " + parallel_jacobiB(mA, b, x0, n, 1e-9, xp, cores) + " iteracji");
-        end = System.nanoTime();
-        duration = end - start;
-        System.out.println("\t\tCzas wykonania: " + String.format("%.3f",duration / 1e6) + " milisekund");
-        System.out.println("\t" + cores / 2 + " wątk" + (cores / 2 < 5 ? "i" : "ów" + ":"));
-        start = System.nanoTime();
-        System.out.println("\t\tWykonano " + parallel_jacobiB(mA, b, x0, n, 1e-9, xp, cores / 2) + " iteracji");
-        end = System.nanoTime();
-        duration = end - start;
-        System.out.println("\t\tCzas wykonania: " + String.format("%.3f",duration / 1e6) + " milisekund");
+        for( int nThreads : p ) {
+            System.out.println("\t" + nThreads + " wątk" + (nThreads < 5 ? "i" : "ów") + ":");
+            start = System.nanoTime();
+            System.out.println("\t\tWykonano " + parallel_jacobiB(mA, b, x0, n, 1e-9, xp, nThreads) + " iteracji");
+            end = System.nanoTime();
+            duration = end - start;
+            System.out.println("\t\tCzas wykonania: " + String.format("%.3f", duration / 1e6) + " milisekund");
+        }
         if (n < 20) {
             for (int r = 0; r < n; r++) {
                 System.out.println(xp[r]);
