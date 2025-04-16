@@ -5,6 +5,7 @@
  */
 package parIterative;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -286,7 +287,7 @@ public class IterativeSolvers {
                     sum -= mA.get(row, col) * x[col];
                 }
                 for (int col = row + 1; col < n; col++) {
-                    sum -= mA.get(row, col) * x[col];
+                    sum -= mA.get(row, col) * xp[col];
                 }
                 x[row] = sum / mA.get(row, row);
             }
@@ -376,7 +377,7 @@ public class IterativeSolvers {
         private final int finish;
         private volatile boolean[] theEnd;
         private final CyclicBarrier firstBarrier, secondBarrier;
-        private final int myNumber;
+        private final int myNumber;  // for diagnostics - normally not used
 
         GaussSeidelPartSolver(SparseMatrixInterface mA, double[] b, double[] x, double[] xp,
                 int start, int finish, boolean[] theEnd, int myNumber, CyclicBarrier bar1, CyclicBarrier bar2) {
@@ -447,19 +448,28 @@ public class IterativeSolvers {
             }
         }
         double[] x0 = new double[n];
-        for (int r = 0; r < n; r++) {
-            x0[r] = 0.0;
-        }
+        Arrays.fill(x0, 0.0);
         double[] x = new double[n];
+        Arrays.fill(x, 0.0);
 
         System.out.println("Rozwiązuję:");
         System.out.flush();
 
         long start = System.nanoTime();
-        System.out.println("Sekwencyjnie:\n\tWykonano " + jacobi(mA, b, x0, n, 1e-9, x) + " iteracji");
+        int it = jacobi(mA, b, x0, n, 1e-9, x);
         long end = System.nanoTime();
         long duration = end - start;
-        System.out.println("\tCzas wykonania: " + String.format("%.3f", duration / 1e6) + " milisekund");
+        System.out.println("Metoda                                 L.w.   #it     Czas [ms]");
+        final String FMT = "%-35.35s    %2d    %3d    %10.3f";
+        System.out.println(String.format(FMT, "Sekwencyjnie Jacobi", 1, it, duration / 1e6));
+
+        Arrays.fill(x0, 0.0);
+        Arrays.fill(x, 0.0);
+        start = System.nanoTime();
+        it = gaussSeidel(mA, b, x0, n, 1e-9, x);
+        end = System.nanoTime();
+        duration = end - start;
+        System.out.println(String.format(FMT, "Sekwencyjnie Gauss-Seidel", 1, it, duration / 1e6));
 
         if (n < 20) {
             for (int r = 0; r < n; r++) {
@@ -472,7 +482,6 @@ public class IterativeSolvers {
                 }
             }
         }
-        double[] xp = new double[n];
         int cores = Runtime.getRuntime().availableProcessors();
         int[] p;
         if (args.length > 2) {
@@ -485,44 +494,44 @@ public class IterativeSolvers {
             p[0] = cores / 2;
             p[1] = cores;
         }
-        System.out.println("Współbieżnie, Jacobi:");
         for (int nThreads : p) {
-            System.out.println("\t" + nThreads + " wątk" + (nThreads < 5 ? "i" : "ów") + ":");
+            Arrays.fill(x0, 0.0);
+            Arrays.fill(x, 0.0);
             start = System.nanoTime();
-            System.out.println("\t\tWykonano " + parallel_jacobiB(mA, b, x0, n, 1e-9, xp, nThreads) + " iteracji");
+            it = parallel_jacobiB(mA, b, x0, n, 1e-9, x, nThreads);
             end = System.nanoTime();
             duration = end - start;
-            System.out.println("\t\tCzas wykonania: " + String.format("%.3f", duration / 1e6) + " milisekund");
+            System.out.println(String.format(FMT, "Współbieżnie Jacobi", nThreads, it, duration / 1e6));
 
             if (n < 20) {
                 for (int r = 0; r < n; r++) {
-                    System.out.println(xp[r]);
+                    System.out.println(x[r]);
                 }
             } else {
                 for (int r = 0; r < n; r++) {
-                    if (Math.abs(xp[r] - r) > 1e-6) {
-                        System.out.println(xp[r] + " mi się nie podoba!");
+                    if (Math.abs(x[r] - r) > 1e-6) {
+                        System.out.println(x[r] + " mi się nie podoba!");
                     }
                 }
             }
         }
-        System.out.println("Współbieżnie, Gauss-Seidel (SOR), omega=" + omega);
         for (int nThreads : p) {
-            System.out.println("\t" + nThreads + " wątk" + (nThreads < 5 ? "i" : "ów") + ":");
+            Arrays.fill(x0, 0.0);
+            Arrays.fill(x, 0.0);
             start = System.nanoTime();
-            System.out.println("\t\tWykonano " + parallel_GaussSeidel_SOR(mA, b, x0, n, omega, 1e-9, xp, nThreads) + " iteracji");
+            it = parallel_GaussSeidel_SOR(mA, b, x0, n, omega, 1e-9, x, nThreads);
             end = System.nanoTime();
             duration = end - start;
-            System.out.println("\t\tCzas wykonania: " + String.format("%.3f", duration / 1e6) + " milisekund");
+            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel (SOR)", nThreads, it, duration / 1e6));
 
             if (n < 20) {
                 for (int r = 0; r < n; r++) {
-                    System.out.println(xp[r]);
+                    System.out.println(x[r]);
                 }
             } else {
                 for (int r = 0; r < n; r++) {
-                    if (Math.abs(xp[r] - r) > 1e-6) {
-                        System.out.println(xp[r] + " mi się nie podoba!");
+                    if (Math.abs(x[r] - r) > 1e-6) {
+                        System.out.println(x[r] + " mi się nie podoba!");
                     }
                 }
             }

@@ -19,7 +19,7 @@ import java.util.List;
 
 public class RunnerGUI {
 
-    private final static Font FONT = new Font("Arial", Font.PLAIN, 24);
+    private final static Font FONT = new Font("Courier", Font.PLAIN, 24);
     private final static List<String> classes = new ArrayList<>();
 
     public static void main(String[] args) {
