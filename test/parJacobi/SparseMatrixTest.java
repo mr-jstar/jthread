@@ -1,5 +1,6 @@
 package parJacobi;
 
+import parIterative.SparseMatrix;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
