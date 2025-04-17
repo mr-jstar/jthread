@@ -17,4 +17,6 @@ public interface SparseMatrixInterface {
     
     int size();
     
+    public void multiply4IS(double[] x, double [] xp, double [] b, int start, int end);
+    
 }

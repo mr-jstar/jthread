@@ -81,14 +81,21 @@ public class CRS implements SparseMatrixInterface {
         return r;
     }
     
-    public double[] multiply4IS(double[] x, int start, int end) {
-        double[] r = new double[end-start];
+    @Override
+    public void multiply4IS(double[] x, double [] xp, double [] b, int start, int end) {
+        double sum, aii= 0.0;
         for (int i = start; i < end; i++) {
+            sum = b[i];
             for (int k = ia[i]; k < ia[i + 1]; k++) {
-                r[i] += x[ja[k]] * a[k];
+                if( ja[k] < i )
+                    sum -= x[ja[k]] * a[k];
+                else if( ja[k] > i )
+                    sum -= xp[ja[k]] * a[k];
+                else
+                    aii = a[k];
             }
+            x[i] = sum / aii;
         }
-        return r;
     }
     
     public void multiply(double[] x, double[] r) {
