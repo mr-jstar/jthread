@@ -458,10 +458,11 @@ public class IterativeSolvers {
         int it = jacobi(mA, b, x0, n, 1e-9, x);
         long end = System.nanoTime();
         long duration = end - start;
-        System.out.println("Metoda                                L.w.   #it     Czas [ms]");
-        System.out.println("--------------------------------------------------------------");
-        final String FMT = "%-35.35s    %2d    %3d    %10.3f";
-        System.out.println(String.format(FMT, "Sekwencyjnie Jacobi", 1, it, duration / 1e6));
+        System.out.println("Metoda                                L.w.   #it     Czas [ms]      S       ε");
+        System.out.println("-------------------------------------------------------------------------------");
+        final String FMT = "%-35.35s    %2d    %3d    %10.3f   %5.2f   %5.2f";
+        System.out.println(String.format(FMT, "Sekwencyjnie Jacobi", 1, it, duration / 1e6, 1.0, 1.0));
+        double S1j = duration;
 
         Arrays.fill(x0, 0.0);
         Arrays.fill(x, 0.0);
@@ -469,7 +470,8 @@ public class IterativeSolvers {
         it = gaussSeidel(mA, b, x0, n, 1e-9, x);
         end = System.nanoTime();
         duration = end - start;
-        System.out.println(String.format(FMT, "Sekwencyjnie Gauss-Seidel", 1, it, duration / 1e6));
+        System.out.println(String.format(FMT, "Sekwencyjnie Gauss-Seidel", 1, it, duration / 1e6, 1.0, 1.0));
+        double S1gs = duration;
 
         if (n < 20) {
             for (int r = 0; r < n; r++) {
@@ -501,7 +503,7 @@ public class IterativeSolvers {
             it = parallel_jacobiB(mA, b, x0, n, 1e-9, x, nThreads);
             end = System.nanoTime();
             duration = end - start;
-            System.out.println(String.format(FMT, "Współbieżnie Jacobi", nThreads, it, duration / 1e6));
+            System.out.println(String.format(FMT, "Współbieżnie Jacobi", nThreads, it, duration / 1e6, S1j/duration, ((duration/S1j-1/nThreads)/(1-1/nThreads))));
 
             if (n < 20) {
                 for (int r = 0; r < n; r++) {
@@ -522,7 +524,7 @@ public class IterativeSolvers {
             it = parallel_GaussSeidel_SOR(mA, b, x0, n, omega, 1e-9, x, nThreads);
             end = System.nanoTime();
             duration = end - start;
-            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel " + (omega < 1 ? "(SOR)" : "     "), nThreads, it, duration / 1e6));
+            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel " + (omega < 1 ? "(SOR)" : "     "), nThreads, it, duration / 1e6, S1gs/duration, ((duration/S1gs-1/nThreads)/(1-1/nThreads))));
 
             if (n < 20) {
                 for (int r = 0; r < n; r++) {
@@ -536,7 +538,7 @@ public class IterativeSolvers {
                 }
             }
         }
-        System.out.println("--------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------------");
         System.out.println("Koniec.");
         if( args.length == 0 )
             System.out.println("""
