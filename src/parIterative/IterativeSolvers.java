@@ -428,17 +428,19 @@ public class IterativeSolvers {
     }
 
     public static void main(String[] args) {
-        int n = args.length > 0 ? Integer.parseInt(args[0]) : 1000;
+        double a0 = args.length > 0 ? Double.parseDouble(args[0]) : 1000;
+        int n = (int)a0;
+        int sp = (int)(n * (a0-n)) == 0 ? n / 10 : (int)(n * (a0-n));
         double omega = args.length > 1 ? Double.parseDouble(args[1]) : 1.0;
-        System.out.println("Buduję rzadki układ " + n + " równań.");
+        System.out.println("Buduję rzadki układ " + n + " równań z około " + n*sp + " niezerowymi współczynnikami.");
         SparseMatrixInterface mA = new SparseMatrix(n);
         Random rnd = new Random();
         for (int row = 0; row < n; row++) {
-            for (int t = 0; t < n / 10; t++) {
+            for (int t = 0; t < sp; t++) {
                 int col = rnd.nextInt(n);
                 mA.set(row, col, rnd.nextDouble());
             }
-            mA.set(row, row, (1.0 + rnd.nextDouble()) * n);
+            mA.set(row, row, (1.0 + rnd.nextDouble()) * sp);
         }
         double[] b = new double[n];
         for (int row = 0; row < n; row++) {
@@ -544,13 +546,17 @@ public class IterativeSolvers {
             System.out.println("""
                                \n\n
                                Przy uruchomieniu klasy możesz podać argumenty, które oznaczają kolejno:
-                               \t - wielkość układu równań
+                               \t - <wielkość układu równań>.<wypełnienie>
                                \t - współczynnik nadrelaksacji (omega) dla SOR:  1 -- bez SOR, < 1-- z S)R
                                \t - listę liczb wątków, które mają być uruchomione w algorytmach równoległych
                                
                                Np.
-                               java IterativeSolvers  5000 1 2 4 6 8 10 12 
-                                uruchomi solvery dla układu 5000 równań, bez SOR, z użyciem kolejno 2,4,6..12 wątków.
+                               java IterativeSolvers  5000.01 1 2 4 6 8 10 12 
+                                uruchomi solvery dla układu 5000 równań o wypełnieniu 1% (~50 niezerowych współczynników w wierszu),
+                                bez SOR, z użyciem kolejno 2,4,6..12 wątków.
+                               
+                               Progam wypisuje czasy rozwiązań i wysnacza przyspieszenie wynikające ze zrównoleglenia (S(1)/S(p)) oraz
+                               wartość metryki Karpa-Flatta (oszacowanie części sekwencyjnej = (1/S-1/p)/(1-1/p) )
                                """);
     }
 }

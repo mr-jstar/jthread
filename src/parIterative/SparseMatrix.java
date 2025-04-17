@@ -5,7 +5,12 @@
  */
 package parIterative;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -45,5 +50,37 @@ public class SparseMatrix implements SparseMatrixInterface {
     public int size() {
         return n;
     }
+    
+    public CRS toCRS() {
+        int[] ia = new int[n + 1];
+        for (HashMap.Entry<Integer, HashMap<Integer, Double>> rowEntry : a.entrySet()) {
+            int i = rowEntry.getKey();
+            ia[i + 1] = rowEntry.getValue().size();
+        }
+        for (int i = 2; i <= n; i++) {
+            ia[i] += ia[i - 1];
+        }
+        int nz = ia[n];
+        int[] ja = new int[nz];
+        double[] crsa = new double[nz];
+        for (HashMap.Entry<Integer, HashMap<Integer, Double>> rowEntry : a.entrySet()) {
+            int i = rowEntry.getKey();
+            List<Map.Entry<Integer, Double>> row = new ArrayList<>(rowEntry.getValue().entrySet());
 
+            Collections.sort(row, new Comparator<Map.Entry<Integer, Double>>() {
+                @Override
+                public int compare(Map.Entry<Integer, Double> e1, Map.Entry<Integer, Double> e2) {
+                    return e1.getKey() - e2.getKey();
+                }
+            });
+            int j = ia[i];
+            for (Map.Entry<Integer, Double> e : row) {
+                ja[j] = e.getKey();
+                crsa[j] = e.getValue();
+                j++;
+            }
+        }
+
+        return new CRS(ia, ja, crsa);
+    }
 }
