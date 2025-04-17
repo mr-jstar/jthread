@@ -451,7 +451,6 @@ public class IterativeSolvers {
         Arrays.fill(x0, 0.0);
         double[] x = new double[n];
         Arrays.fill(x, 0.0);
-
         System.out.println("Rozwiązuję:");
         System.out.flush();
 
@@ -459,7 +458,8 @@ public class IterativeSolvers {
         int it = jacobi(mA, b, x0, n, 1e-9, x);
         long end = System.nanoTime();
         long duration = end - start;
-        System.out.println("Metoda                                 L.w.   #it     Czas [ms]");
+        System.out.println("Metoda                                L.w.   #it     Czas [ms]");
+        System.out.println("--------------------------------------------------------------");
         final String FMT = "%-35.35s    %2d    %3d    %10.3f";
         System.out.println(String.format(FMT, "Sekwencyjnie Jacobi", 1, it, duration / 1e6));
 
@@ -522,7 +522,7 @@ public class IterativeSolvers {
             it = parallel_GaussSeidel_SOR(mA, b, x0, n, omega, 1e-9, x, nThreads);
             end = System.nanoTime();
             duration = end - start;
-            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel (SOR)", nThreads, it, duration / 1e6));
+            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel " + (omega < 1 ? "(SOR)" : "     "), nThreads, it, duration / 1e6));
 
             if (n < 20) {
                 for (int r = 0; r < n; r++) {
@@ -536,5 +536,19 @@ public class IterativeSolvers {
                 }
             }
         }
+        System.out.println("--------------------------------------------------------------");
+        System.out.println("Koniec.");
+        if( args.length == 0 )
+            System.out.println("""
+                               \n\n
+                               Przy uruchomieniu klasy możesz podać argumenty, które oznaczają kolejno:
+                               \t - wielkość układu równań
+                               \t - współczynnik nadrelaksacji (omega) dla SOR:  1 -- bez SOR, < 1-- z S)R
+                               \t - listę liczb wątków, które mają być uruchomione w algorytmach równoległych
+                               
+                               Np.
+                               java IterativeSolvers  5000 1 2 4 6 8 10 12 
+                                uruchomi solvery dla układu 5000 równań, bez SOR, z użyciem kolejno 2,4,6..12 wątków.
+                               """);
     }
 }
