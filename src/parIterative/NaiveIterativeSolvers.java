@@ -5,6 +5,7 @@
  */
 package parIterative;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
@@ -14,15 +15,21 @@ import java.util.concurrent.CyclicBarrier;
  *
  * @author jstar
  */
-public class IterativeSolversEffective {
+public class NaiveIterativeSolvers {
 
     // Klasyczny, prosty algorytm Jacobiego
-    public static int jacobi(SparseMatrixInterface mA, double[] b, double[] x0, int maxIt, double eps, double[] x) {
+    public static int jacobi(SparseMatrix mA, double[] b, double[] x0, int maxIt, double eps, double[] x) {
         int n = mA.size();
         double[] xp = new double[n];
         System.arraycopy(x0, 0, xp, 0, n);
         for (int it = 0; it < maxIt; it++) {
-            mA.multiply4IS(x, xp, b, 0, n);
+            for (int row = 0; row < n; row++) {
+                x[row] = -b[row];
+                for (int col = 0; col < n; col++) {
+                    x[row] += mA.get(row, col) * xp[col];
+                }
+                x[row] = xp[row] - x[row] / mA.get(row, row);
+            }
             double err = 0.0;
             for (int row = 0; row < n; row++) {
                 err += (x[row] - xp[row]) * (x[row] - xp[row]);
@@ -37,7 +44,7 @@ public class IterativeSolversEffective {
 
     // Zrównoleglenie wykorzystujące wątki
     // Każdy wątek monitoruje lokalnie zbiezność => patrz klasa JacobiSolverA
-    public static int parallel_jacobiA(SparseMatrixInterface mA, double[] b, double[] x0, int maxIt, double eps, double[] x, int nthreads) {
+    public static int parallel_jacobiA(SparseMatrix mA, double[] b, double[] x0, int maxIt, double eps, double[] x, int nthreads) {
         JacobiPartSolverA[] threads = new JacobiPartSolverA[nthreads];
         boolean[] threadFinished = new boolean[nthreads];
         int n = mA.size();
@@ -97,7 +104,7 @@ public class IterativeSolversEffective {
     // Zrównoleglenie wykorzystujące wątki
     // Tylko wątek główny monitoruje zbiezność i zatrzymuje wątki robocze przez flagę theEnd
     // => patrz klasa JacobiSolverB
-    public static int parallel_jacobiB(SparseMatrixInterface mA, double[] b, double[] x0, int maxIt, double eps, double[] x, int nthreads) {
+    public static int parallel_jacobiB(SparseMatrix mA, double[] b, double[] x0, int maxIt, double eps, double[] x, int nthreads) {
         JacobiPartSolverB[] threads = new JacobiPartSolverB[nthreads];
         boolean[] theEnd = new boolean[1];
         theEnd[0] = false;
@@ -155,7 +162,7 @@ public class IterativeSolversEffective {
 
     private static class JacobiPartSolverA extends Thread {
 
-        private final SparseMatrixInterface mA;
+        private final SparseMatrix mA;
         private final double[] b;
         private final double eps;
         private volatile double[] x;
@@ -166,7 +173,7 @@ public class IterativeSolversEffective {
         private final int myNumber;
         private final CyclicBarrier firstBarrier, secondBarrier;
 
-        JacobiPartSolverA(SparseMatrixInterface mA, double[] b, double eps, double[] x, double[] xp,
+        JacobiPartSolverA(SparseMatrix mA, double[] b, double eps, double[] x, double[] xp,
                 int start, int finish, boolean[] threadFinished, int myNumber, CyclicBarrier bar1, CyclicBarrier bar2) {
             this.mA = mA;
             this.b = b;
@@ -187,7 +194,13 @@ public class IterativeSolversEffective {
             System.err.println("Thread #" + myNumber + " will solve <" + start + "," + finish + ")");
             while (!threadFinished[myNumber]) {
                 //System.err.println( "Thread#" + myNumber + " it#" + it++);
-                mA.multiply4IS(x, xp, b, start, finish);
+                for (int row = start; row < finish; row++) {
+                    x[row] = -b[row];
+                    for (int col = 0; col < n; col++) {
+                        x[row] += mA.get(row, col) * xp[col];
+                    }
+                    x[row] = xp[row] - x[row] / mA.get(row, row);
+                }
                 double err = 0.0; // Liczymy błąd lokalnie i decydujemy, czy mamy dosyć
                 for (int r = start; r < finish; r++) {
                     err += (x[r] - xp[r]) * (x[r] - xp[r]);
@@ -211,7 +224,7 @@ public class IterativeSolversEffective {
 
     private static class JacobiPartSolverB extends Thread {
 
-        private final SparseMatrixInterface mA;
+        private final SparseMatrix mA;
         private final double[] b;
         private volatile double[] x;
         private volatile double[] xp;
@@ -220,7 +233,7 @@ public class IterativeSolversEffective {
         private volatile boolean[] theEnd;
         private final CyclicBarrier firstBarrier, secondBarrier;
 
-        JacobiPartSolverB(SparseMatrixInterface mA, double[] b, double[] x, double[] xp,
+        JacobiPartSolverB(SparseMatrix mA, double[] b, double[] x, double[] xp,
                 int start, int finish, boolean[] theEnd, int myNumber, CyclicBarrier bar1, CyclicBarrier bar2) {
             this.mA = mA;
             this.b = b;
@@ -239,7 +252,13 @@ public class IterativeSolversEffective {
             //System.err.println("Thread #" + myNumber + " will solve <" + start + "," + finish + ")");
             while (!theEnd[0]) {
                 //System.err.println("Thread#" + myNumber + " it#" + it++);
-                mA.multiply4IS(x, xp, b, start, finish);
+                for (int row = start; row < finish; row++) {
+                    x[row] = -b[row];
+                    for (int col = 0; col < n; col++) {
+                        x[row] += mA.get(row, col) * xp[col];
+                    }
+                    x[row] = xp[row] - x[row] / mA.get(row, row);
+                }
                 try {
                     firstBarrier.await();  // Czekamy aż wszyscy skończą
                     secondBarrier.await(); // Czakamy aż główny zdecyduje, co dalej
@@ -258,12 +277,21 @@ public class IterativeSolversEffective {
         }
     }
 
-    public static int gaussSeidel(SparseMatrixInterface mA, double[] b, double[] x0, int maxIt, double eps, double[] x) {
+    public static int gaussSeidel(SparseMatrix mA, double[] b, double[] x0, int maxIt, double eps, double[] x) {
         int n = mA.size();
         double[] xp = new double[n];
         System.arraycopy(x0, 0, xp, 0, n);
         for (int it = 0; it < maxIt; it++) {
-            mA.multiply4IS(x, xp, b, 0, n);
+            for (int row = 0; row < n; row++) {
+                double sum = b[row];
+                for (int col = 0; col < row; col++) {
+                    sum -= mA.get(row, col) * x[col];
+                }
+                for (int col = row + 1; col < n; col++) {
+                    sum -= mA.get(row, col) * xp[col];
+                }
+                x[row] = sum / mA.get(row, row);
+            }
             double err = 0.0;
             for (int row = 0; row < n; row++) {
                 err += (x[row] - xp[row]) * (x[row] - xp[row]);
@@ -279,7 +307,7 @@ public class IterativeSolversEffective {
     // Zrównoleglenie wykorzystujące wątki
     // Tylko wątek główny monitoruje zbiezność i zatrzymuje wątki robocze przez flagę theEnd
     // Wątek główny wykonuje nadrelaksację. Ustawienie omega == 1 wyłączy ją
-    public static int parallel_GaussSeidel_SOR(SparseMatrixInterface mA, double[] b, double[] x0, int maxIt, double omega, double eps, double[] x, int nthreads) {
+    public static int parallel_GaussSeidel_SOR(SparseMatrix mA, double[] b, double[] x0, int maxIt, double omega, double eps, double[] x, int nthreads) {
         GaussSeidelPartSolver[] threads = new GaussSeidelPartSolver[nthreads];
         boolean[] theEnd = new boolean[1];
         theEnd[0] = false;
@@ -342,7 +370,7 @@ public class IterativeSolversEffective {
 
     static class GaussSeidelPartSolver extends Thread {
 
-        private final SparseMatrixInterface mA;
+        private final SparseMatrix mA;
         private final double[] b;
         private volatile double[] x;
         private volatile double[] xp;
@@ -352,7 +380,7 @@ public class IterativeSolversEffective {
         private final CyclicBarrier firstBarrier, secondBarrier;
         private final int myNumber;  // for diagnostics - normally not used
 
-        GaussSeidelPartSolver(SparseMatrixInterface mA, double[] b, double[] x, double[] xp,
+        GaussSeidelPartSolver(SparseMatrix mA, double[] b, double[] x, double[] xp,
                 int start, int finish, boolean[] theEnd, int myNumber, CyclicBarrier bar1, CyclicBarrier bar2) {
             this.mA = mA;
             this.b = b;
@@ -372,7 +400,16 @@ public class IterativeSolversEffective {
             //System.err.println("Thread #" + myNumber + " will solve <" + start + "," + finish + ")");
             while (!theEnd[0]) {
                 //System.err.println("Thread#" + myNumber + " it#" + it++);
-                mA.multiply4IS(x, x, b, start, finish);
+                for (int row = start; row < finish; row++) {
+                    double sum = b[row];
+                    for (int col = 0; col < row; col++) {
+                        sum -= mA.get(row, col) * x[col];
+                    }
+                    for (int col = row + 1; col < n; col++) {
+                        sum -= mA.get(row, col) * x[col];
+                    }
+                    x[row] = sum / mA.get(row, row);
+                }
                 try {
                     firstBarrier.await();  // Czekamy aż wszyscy skończą
                     secondBarrier.await(); // Czakamy aż główny zdecyduje, co dalej
@@ -391,13 +428,29 @@ public class IterativeSolversEffective {
         }
     }
 
+    public static void checkX(double[] x) {
+        int n = x.length;
+        if (n < 20) {
+            for (int r = 0; r < n; r++) {
+                System.out.println(x[r]);
+            }
+        }
+
+        for (int r = 0; r < n; r++) {
+            if (Math.abs(x[r] - r) > 1e-3) {
+                System.out.println("x[" + r + "]=" + x[r] + " mi się nie podoba!");
+            }
+        }
+
+    }
+
     public static void main(String[] args) {
         double a0 = args.length > 0 ? Double.parseDouble(args[0]) : 1000;
-        int n = (int)a0;
-        int sp = (int)(n * (a0-n)) == 0 ? n / 10 : (int)(n * (a0-n));
+        int n = (int) a0;
+        int sp = (int) (n * (a0 - n)) == 0 ? n / 10 : (int) (n * (a0 - n));
         double omega = args.length > 1 ? Double.parseDouble(args[1]) : 1.0;
-        System.out.println("Buduję rzadki układ " + n + " równań z około " + n*sp + " niezerowymi współczynnikami.");
-        SparseMatrixInterface mA = new SparseMatrix(n);
+        System.out.println("Buduję rzadki układ " + n + " równań z około " + n * sp + " niezerowymi współczynnikami.");
+        SparseMatrix mA = new HashMapSparseMatrix(n);
         Random rnd = new Random();
         for (int row = 0; row < n; row++) {
             for (int t = 0; t < sp; t++) {
@@ -429,6 +482,32 @@ public class IterativeSolversEffective {
         final String FMT = "%-35.35s    %2d    %3d    %10.3f   %5.2f   %5.2f";
         System.out.println(String.format(FMT, "Sekwencyjnie Jacobi", 1, it, duration / 1e6, 1.0, 1.0));
         double S1j = duration;
+        checkX(x);
+
+        int cores = Runtime.getRuntime().availableProcessors();
+        ArrayList<Integer> p = new ArrayList<>();
+        if (args.length > 2) {
+            try {
+                for (int i = 2; i < args.length; i++) {
+                    p.add(Integer.valueOf(args[i]));
+                }
+            } catch (NumberFormatException e) {
+            }
+        } else {
+            p.add(cores / 2);
+            p.add(cores);
+        }
+        for (int nThreads : p) {
+            Arrays.fill(x0, 0.0);
+            Arrays.fill(x, 0.0);
+            start = System.nanoTime();
+            it = parallel_jacobiB(mA, b, x0, n, 1e-9, x, nThreads);
+            end = System.nanoTime();
+            duration = end - start;
+            System.out.println(String.format(FMT, "Współbieżnie Jacobi", nThreads, it, duration / 1e6, S1j / duration, ((duration / S1j - 1 / nThreads) / (1 - 1 / nThreads))));
+            checkX(x);
+        }
+        System.out.println("-------------------------------------------------------------------------------");
 
         Arrays.fill(x0, 0.0);
         Arrays.fill(x, 0.0);
@@ -438,51 +517,8 @@ public class IterativeSolversEffective {
         duration = end - start;
         System.out.println(String.format(FMT, "Sekwencyjnie Gauss-Seidel", 1, it, duration / 1e6, 1.0, 1.0));
         double S1gs = duration;
+        checkX(x);
 
-        if (n < 20) {
-            for (int r = 0; r < n; r++) {
-                System.out.println(x[r]);
-            }
-        } else {
-            for (int r = 0; r < n; r++) {
-                if (Math.abs(x[r] - r) > 1e-3) {
-                    System.out.println(x[r] + " mi się nie podoba!");
-                }
-            }
-        }
-        int cores = Runtime.getRuntime().availableProcessors();
-        int[] p;
-        if (args.length > 2) {
-            p = new int[args.length - 2];
-            for (int i = 2; i < args.length; i++) {
-                p[i - 2] = Integer.parseInt(args[i]);
-            }
-        } else {
-            p = new int[2];
-            p[0] = cores / 2;
-            p[1] = cores;
-        }
-        for (int nThreads : p) {
-            Arrays.fill(x0, 0.0);
-            Arrays.fill(x, 0.0);
-            start = System.nanoTime();
-            it = parallel_jacobiB(mA, b, x0, n, 1e-9, x, nThreads);
-            end = System.nanoTime();
-            duration = end - start;
-            System.out.println(String.format(FMT, "Współbieżnie Jacobi", nThreads, it, duration / 1e6, S1j/duration, ((duration/S1j-1/nThreads)/(1-1/nThreads))));
-
-            if (n < 20) {
-                for (int r = 0; r < n; r++) {
-                    System.out.println(x[r]);
-                }
-            } else {
-                for (int r = 0; r < n; r++) {
-                    if (Math.abs(x[r] - r) > 1e-6) {
-                        System.out.println(x[r] + " mi się nie podoba!");
-                    }
-                }
-            }
-        }
         for (int nThreads : p) {
             Arrays.fill(x0, 0.0);
             Arrays.fill(x, 0.0);
@@ -490,23 +526,12 @@ public class IterativeSolversEffective {
             it = parallel_GaussSeidel_SOR(mA, b, x0, n, omega, 1e-9, x, nThreads);
             end = System.nanoTime();
             duration = end - start;
-            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel " + (omega < 1 ? "(SOR)" : "     "), nThreads, it, duration / 1e6, S1gs/duration, ((duration/S1gs-1/nThreads)/(1-1/nThreads))));
-
-            if (n < 20) {
-                for (int r = 0; r < n; r++) {
-                    System.out.println(x[r]);
-                }
-            } else {
-                for (int r = 0; r < n; r++) {
-                    if (Math.abs(x[r] - r) > 1e-6) {
-                        System.out.println(x[r] + " mi się nie podoba!");
-                    }
-                }
-            }
+            System.out.println(String.format(FMT, "Współbieżnie Gauss-Seidel " + (omega < 1 ? "(SOR)" : "     "), nThreads, it, duration / 1e6, S1gs / duration, ((duration / S1gs - 1 / nThreads) / (1 - 1 / nThreads))));
+            checkX(x);
         }
         System.out.println("-------------------------------------------------------------------------------");
         System.out.println("Koniec.");
-        if( args.length == 0 )
+        if (args.length == 0) {
             System.out.println("""
                                \n\n
                                Przy uruchomieniu klasy możesz podać argumenty, które oznaczają kolejno:
@@ -522,5 +547,6 @@ public class IterativeSolversEffective {
                                Progam wypisuje czasy rozwiązań i wysnacza przyspieszenie wynikające ze zrównoleglenia (S(1)/S(p)) oraz
                                wartość metryki Karpa-Flatta (oszacowanie części sekwencyjnej = (1/S-1/p)/(1-1/p) )
                                """);
+        }
     }
 }

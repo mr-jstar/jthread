@@ -19,7 +19,11 @@ import java.util.List;
 
 public class RunnerGUI {
 
-    private final static Font FONT = new Font("Courier", Font.PLAIN, 24);
+    private final static Font FONT12 = new Font("Courier", Font.PLAIN, 12);
+    private final static Font FONT18 = new Font("Courier", Font.PLAIN, 18);
+    private final static Font FONT24 = new Font("Courier", Font.PLAIN, 24);
+    private static Font [] fonts = {FONT12, FONT18, FONT24 };
+    private static Font currentFont = fonts[0];
     private final static List<String> classes = new ArrayList<>();
 
     public static void main(String[] args) {
@@ -72,8 +76,8 @@ public class RunnerGUI {
         buttonPanel.add( new JLabel("Args:") );
         JTextField argsTF = new JTextField();
         argsTF.setAlignmentX(0);
-        argsTF.setColumns(15);
-        //args.setSize(300, scrollPane.getFontMetrics(FONT).getHeight());
+        argsTF.setColumns(35);
+        //args.setSize(300, scrollPane.getFontMetrics(FONT24).getHeight());
         buttonPanel.add(argsTF);
         JButton runButton = new JButton("Run");
         runButton.addActionListener((ActionEvent e) -> {
@@ -90,14 +94,35 @@ public class RunnerGUI {
         buttonPanel.add(closeButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        Dimension size = new Dimension(600, (4 + classes.size()) * scrollPane.getFontMetrics(FONT).getHeight());
+        Dimension size = new Dimension(600, (4 + classes.size()) * scrollPane.getFontMetrics(FONT24).getHeight());
         JFrame frame = new JFrame("Class Runner");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setSize(size);
-
         frame.add(panel);
-        setFontRecursively(frame, FONT);
+        
+        JMenu guiOpts = new JMenu("Options");
+        ButtonGroup fgroup = new ButtonGroup();
+        guiOpts.add(new JMenuItem("Font size"));
+        for (Font f : fonts) {
+            JRadioButtonMenuItem fontOpt = new JRadioButtonMenuItem("\t\t\t" + String.valueOf(f.getSize()));
+            final Font cf = f;
+            fontOpt.addActionListener(e -> {
+                currentFont = cf;
+                setFontRecursively(frame, currentFont);
+                UIManager.put("OptionPane.messageFont", currentFont);
+                UIManager.put("OptionPane.buttonFont", currentFont);
+                UIManager.put("OptionPane.messageFont", currentFont);
+            });
+            fontOpt.setSelected(f == currentFont);
+            fgroup.add(fontOpt);
+            guiOpts.add(fontOpt);
+        }
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(guiOpts);
+        frame.setJMenuBar(menuBar);
+        
+        setFontRecursively(frame, currentFont);
         frame.setVisible(true);
     }
 
@@ -132,17 +157,18 @@ public class RunnerGUI {
         JScrollPane scrollPane = new JScrollPane(outputArea);
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        JTextField inputField = new JTextField();
+        
+        //JTextField inputField = new JTextField();
+        //bottomPanel.add(inputField, BorderLayout.CENTER);
+        
         JButton closeButton = new JButton("Close");
-
-        bottomPanel.add(inputField, BorderLayout.CENTER);
         bottomPanel.add(closeButton, BorderLayout.EAST);
 
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(bottomPanel, BorderLayout.SOUTH);
 
         outputFrame.add(panel);
-        setFontRecursively(outputFrame, FONT);
+        setFontRecursively(outputFrame, currentFont);
         outputFrame.setVisible(true);
 
         closeButton.addActionListener(e -> outputFrame.dispose());

@@ -1,6 +1,6 @@
 package parJacobi;
 
-import parIterative.SparseMatrix;
+import parIterative.HashMapSparseMatrix;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -34,13 +34,13 @@ public class SparseMatrixTest {
     }
 
     /**
-     * Test of set method, of class SparseMatrix.
+     * Test of set method, of class HashMapSparseMatrix.
      */
     @Test
     public void testSet() {
         System.out.println("set");
         double v = 7.0;
-        SparseMatrix instance = new SparseMatrix(10);
+        HashMapSparseMatrix instance = new HashMapSparseMatrix(10);
         for (int i = 0; i < 10; i += 2) {
             instance.set(i, i, v);
         }
@@ -53,12 +53,12 @@ public class SparseMatrixTest {
     }
 
     /**
-     * Test of get method, of class SparseMatrix.
+     * Test of get method, of class HashMapSparseMatrix.
      */
     @Test
     public void testGet() {
         System.out.println("get");
-        SparseMatrix instance = new SparseMatrix(10);
+        HashMapSparseMatrix instance = new HashMapSparseMatrix(10);
         for (int i = 0; i < 10; i++) {
             instance.set(i, 9 - i, i * i);
         }
@@ -68,12 +68,12 @@ public class SparseMatrixTest {
     }
 
     /**
-     * Test of size method, of class SparseMatrix.
+     * Test of size method, of class HashMapSparseMatrix.
      */
     @Test
     public void testSize() {
         System.out.println("size");
-        SparseMatrix instance = new SparseMatrix(1313);
+        HashMapSparseMatrix instance = new HashMapSparseMatrix(1313);
         assertEquals(1313, instance.size());
     }
 

@@ -10,13 +10,13 @@ import java.util.Map;
  *
  * @author jstar
  */
-public class CRS implements SparseMatrixInterface {
+public class CRSSparseMatrix implements SparseMatrix {
 
     private int[] ia;
     private int[] ja;
     private double[] a;
 
-    public CRS(int[] ia, int[] ja, double[] a) {
+    public CRSSparseMatrix(int[] ia, int[] ja, double[] a) {
         this.ia = ia;
         this.ja = ja;
         this.a = a;
@@ -71,8 +71,9 @@ public class CRS implements SparseMatrixInterface {
         throw new IllegalArgumentException("CRS: No entry A[" + i + "," + j + "]");
     }
 
-    public double[] multiply(double[] x) {
-        double[] r = new double[x.length];
+    @Override
+    public double[] multiply(double[] x, int start, int end) {
+        double[] r = new double[end-start];
         for (int i = 0; i < ia.length - 1; i++) {
             for (int k = ia[i]; k < ia[i + 1]; k++) {
                 r[i] += x[ja[k]] * a[k];
@@ -107,7 +108,7 @@ public class CRS implements SparseMatrixInterface {
         }
     }
 
-    public SparseMatrixInterface transpose() { 
+    public SparseMatrix transpose() { 
         int rows = ia.length - 1;
         int cols = rows;
         int[] iaT = new int[cols + 1];
@@ -143,11 +144,11 @@ public class CRS implements SparseMatrixInterface {
         }
         iaT[0] = 0;
 
-        return new CRS(iaT, jaT, aT);
+        return new CRSSparseMatrix(iaT, jaT, aT);
     }
     
-    public SparseMatrix toSparseMatrix() {
-        SparseMatrix hsm = new SparseMatrix(ia.length-1);
+    public HashMapSparseMatrix toSparseMatrix() {
+        HashMapSparseMatrix hsm = new HashMapSparseMatrix(ia.length-1);
         for (int i = 0; i < ia.length - 1; i++) {
             for (int k = ia[i]; k < ia[i + 1]; k++) {
                 hsm.set( i, ja[k], a[k] );
