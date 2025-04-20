@@ -1,9 +1,5 @@
 package run;
 
-/*
- * Do what you want with this file
- */
-
 /**
  *
  * @author jstar with ChatGPT

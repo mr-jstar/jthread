@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package parReduction;
 
 /**
@@ -10,9 +5,9 @@ package parReduction;
  * @author jstar
  */
 public class ParSum extends Thread{
-    private int [] v;
-    private int start;
-    private int wend;
+    private final int [] v;
+    private final int start;
+    private final int wend;
     private double sum;
     
     public ParSum(int [] v, int start, int wend ) {

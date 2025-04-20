@@ -6,10 +6,10 @@ package parReduction;
  */
 public class ParSumQ extends Thread {
 
-    private int[] v;
-    private int start;
-    private int wend;
-    private ParQueue<Double> q;
+    private final int[] v;
+    private final int start;
+    private final int wend;
+    private final ParQueue<Double> q;
 
     public ParSumQ(int[] v, int start, int wend, ParQueue<Double> q) {
         this.v = v;
