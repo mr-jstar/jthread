@@ -67,7 +67,7 @@ public class EffectiveIterativeSolvers {
             mA = mHA;
         } else {
             System.out.println("Konwertuję macierz do formatu CRS.");
-            mA = ((HashMapSparseMatrix) mHA).toCRS();
+            mA = ((HashMapSparseMatrix) mHA).toCRSfaster();
         }
         double[] cols = new double[n];
         for (int c = 0; c < n; c++) {

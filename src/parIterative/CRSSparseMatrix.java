@@ -74,7 +74,7 @@ public class CRSSparseMatrix implements SparseMatrix {
     @Override
     public double[] multiply(double[] x, int start, int end) {
         double[] r = new double[end-start];
-        for (int i = 0; i < ia.length - 1; i++) {
+        for (int i = start; i < end; i++) {
             for (int k = ia[i]; k < ia[i + 1]; k++) {
                 r[i] += x[ja[k]] * a[k];
             }
