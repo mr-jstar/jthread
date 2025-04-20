@@ -13,12 +13,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RunnerGUI {
+public class SwingRunner {
 
-    private final static Font FONT12 = new Font("Courier", Font.PLAIN, 12);
-    private final static Font FONT18 = new Font("Courier", Font.PLAIN, 18);
-    private final static Font FONT24 = new Font("Courier", Font.PLAIN, 24);
-    private static Font [] fonts = {FONT12, FONT18, FONT24 };
+    private final static Font[] fonts = {
+        new Font("Courier", Font.PLAIN, 12),
+        new Font("Courier", Font.PLAIN, 18),
+        new Font("Courier", Font.PLAIN, 24)
+    };
     private static Font currentFont = fonts[0];
     private final static List<String> classes = new ArrayList<>();
 
@@ -29,7 +30,7 @@ public class RunnerGUI {
         Collections.sort(classes);
         System.err.println(here.getAbsolutePath());
 
-        SwingUtilities.invokeLater(RunnerGUI::createMainWindow);
+        SwingUtilities.invokeLater(SwingRunner::createMainWindow);
     }
 
     public static void findClassFiles(List<String> classes, File directory) {
@@ -69,7 +70,7 @@ public class RunnerGUI {
         panel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.add( new JLabel("Args:") );
+        buttonPanel.add(new JLabel("Args:"));
         JTextField argsTF = new JTextField();
         argsTF.setAlignmentX(0);
         argsTF.setColumns(35);
@@ -78,9 +79,9 @@ public class RunnerGUI {
         JButton runButton = new JButton("Run");
         runButton.addActionListener((ActionEvent e) -> {
             String className = classNameField.getSelectedValue();
-            if ( className != null && !className.isEmpty()) {
-                String [] args = argsTF.getText().trim().split("\\s+");
-                runClassInNewWindow(className,args);
+            if (className != null && !className.isEmpty()) {
+                String[] args = argsTF.getText().trim().split("\\s+");
+                runClassInNewWindow(className, args);
             }
         });
         JButton closeButton = new JButton("Close");
@@ -90,13 +91,13 @@ public class RunnerGUI {
         buttonPanel.add(closeButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        Dimension size = new Dimension(600, (4 + classes.size()) * scrollPane.getFontMetrics(FONT24).getHeight());
+        Dimension size = new Dimension(600, (4 + classes.size()) * scrollPane.getFontMetrics(currentFont).getHeight());
         JFrame frame = new JFrame("Class Runner");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setSize(size);
         frame.add(panel);
-        
+
         JMenu guiOpts = new JMenu("Options");
         ButtonGroup fgroup = new ButtonGroup();
         guiOpts.add(new JMenuItem("Font size"));
@@ -117,7 +118,7 @@ public class RunnerGUI {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(guiOpts);
         frame.setJMenuBar(menuBar);
-        
+
         setFontRecursively(frame, currentFont);
         frame.setVisible(true);
     }
@@ -140,7 +141,7 @@ public class RunnerGUI {
         }
     }
 
-    private static void runClassInNewWindow(String className,String [] pargs) {
+    private static void runClassInNewWindow(String className, String[] pargs) {
         JFrame outputFrame = new JFrame("Output: " + className);
         outputFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         outputFrame.setSize(800, 600);
@@ -153,10 +154,9 @@ public class RunnerGUI {
         JScrollPane scrollPane = new JScrollPane(outputArea);
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        
+
         //JTextField inputField = new JTextField();
         //bottomPanel.add(inputField, BorderLayout.CENTER);
-        
         JButton closeButton = new JButton("Close");
         bottomPanel.add(closeButton, BorderLayout.EAST);
 
@@ -195,16 +195,17 @@ public class RunnerGUI {
             }).start();
 
             // Uruchamianie klasy
-            final String[] args = ( pargs == null || pargs[0].length() == 0 ) ? new String[0] : pargs;
+            final String[] args = (pargs == null || pargs[0].length() == 0) ? new String[0] : pargs;
             new Thread(() -> {
                 try {
                     Class<?> cls = Class.forName(className);
                     Method mainMethod = cls.getMethod("main", String[].class);
                     mainMethod.invoke(null, (Object) args);
                 } catch (Exception ex) {
-                    System.err.print( "Args: ");
-                    for( String s: args)
-                        System.err.print( "\"" + s + "\"");
+                    System.err.print("Args: ");
+                    for (String s : args) {
+                        System.err.print("\"" + s + "\"");
+                    }
                     System.err.println();
                     ex.printStackTrace();
                 } finally {
