@@ -86,7 +86,7 @@ public class HashMapSparseMatrix implements SparseMatrix {
         }
     }
 
-    public CRSSparseMatrix toCRS() {
+    public CRSSparseMatrix toCRSsorted() {
         int[] ia = new int[n + 1];
         long start = System.nanoTime();
         for (HashMap.Entry<Integer, HashMap<Integer, Double>> rowEntry : matrix.entrySet()) {
@@ -127,7 +127,7 @@ public class HashMapSparseMatrix implements SparseMatrix {
         return new CRSSparseMatrix(ia, ja, a);
     }
 
-    public CRSSparseMatrix toCRSfaster() {
+    public CRSSparseMatrix toCRS() {
         int[] ia = new int[n + 1];
         long start = System.nanoTime();
         for (HashMap.Entry<Integer, HashMap<Integer, Double>> rowEntry : matrix.entrySet()) {

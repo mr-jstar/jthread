@@ -67,7 +67,7 @@ public class EffectiveIterativeSolvers {
             mA = mHA;
         } else {
             System.out.println("Konwertuję macierz do formatu CRS.");
-            mA = ((HashMapSparseMatrix) mHA).toCRSfaster();
+            mA = ((HashMapSparseMatrix) mHA).toCRS();
         }
         double[] cols = new double[n];
         for (int c = 0; c < n; c++) {
@@ -130,16 +130,20 @@ public class EffectiveIterativeSolvers {
         if (args.length == 0) {
             System.out.println("""
                                \n\n
-                               Przy uruchomieniu klasy możesz podać argumenty, które oznaczają kolejno:
+                               Przy uruchomieniu klasy można podać argumenty, które oznaczają kolejno:
                                \t - <wielkość układu równań>.<wypełnienie>
                                \t - współczynnik nadrelaksacji (omega) dla SOR:  1 -- bez SOR, < 1-- z S)R
                                \t - listę liczb wątków, które mają być uruchomione w algorytmach równoległych
                                \t - opcjonalnie klucz -nocrs wyłączający użycie Compressed Row Storage
                                
                                Np.
-                               java IterativeSolvers  5000.01 1 2 4 6 8 10 12 
+                               java parIerative.EffectiveIterativeSolvers  5000.01 1 2 4 6 8 10 12 
                                 uruchomi solvery dla układu 5000 równań o wypełnieniu 1% (~50 niezerowych współczynników w wierszu),
-                                bez SOR, z użyciem kolejno 2,4,6..12 wątków.
+                                bez SOR, z użyciem kolejno 2,4,6,...,12 wątków.
+                               
+                               java parIerative.EffectiveIterativeSolvers 500000.0001 1 2 3 4 5 6  7 8 9 10 11 12 -nocrs
+                                uruchomi solvery dla układu 500 000 równań o wypełnieniu 0.1 promila (~50 niezerowych współczynników w wierszu),
+                                bez SOR, z użyciem kolejno 2,3,4,5,6,...,11,12 wątków.
                                
                                Progam wypisuje czasy rozwiązań i wyznacza przyspieszenie wynikające ze zrównoleglenia (S(1)/S(p)) oraz
                                wartość metryki Karpa-Flatta (oszacowanie części sekwencyjnej = (1/S-1/p)/(1-1/p) )
