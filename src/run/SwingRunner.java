@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class SwingRunner {
 
@@ -24,6 +25,7 @@ public class SwingRunner {
     private final static List<String> classes = new ArrayList<>();
 
     public static void main(String[] args) {
+        Locale.setDefault(Locale.US);
         File here = new File(".");
         findClassFiles(classes, here);
         classes.remove("run.RunnerGUI");
