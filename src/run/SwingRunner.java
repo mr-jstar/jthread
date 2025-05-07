@@ -7,6 +7,7 @@ package run;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -86,23 +87,61 @@ public class SwingRunner {
                 runClassInNewWindow(className, args);
             }
         });
+        // To poniżej to tylko kwiatki do korzucha
+        /*
+        runButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                runButton.setForeground(Color.RED);
+                System.err.println("Czerwony!");
+            }
+        });
+        runButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                (new Thread() {
+                    public void run() {
+                        try {
+                            System.err.println("Zasypiam");
+                            Thread.sleep(2000);
+                            System.err.println("Obudzony");
+                        } catch (InterruptedException ex) {
+                        }
+                        runButton.setForeground(Color.GREEN);
+                        System.err.println("Zielony?");
+                    }
+                }).start();
+            }
+        }
+        );
+*/
+        // koniec kwiatków
         JButton closeButton = new JButton("Close");
-        closeButton.addActionListener((ActionEvent e) -> System.exit(0));
+
+        closeButton.addActionListener(
+                (ActionEvent e) -> System.exit(0));
         buttonPanel.add(runButton);
-        buttonPanel.add(new JSeparator());
+
+        buttonPanel.add(
+                new JSeparator());
         buttonPanel.add(closeButton);
+
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         Dimension size = new Dimension(600, (4 + classes.size()) * scrollPane.getFontMetrics(currentFont).getHeight());
         JFrame frame = new JFrame("Class Runner");
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         frame.setLocationRelativeTo(null);
         frame.setSize(size);
+
         frame.add(panel);
 
         JMenu guiOpts = new JMenu("Options");
         ButtonGroup fgroup = new ButtonGroup();
-        guiOpts.add(new JMenuItem("Font size"));
+
+        guiOpts.add( new JMenuItem("Font size"));
         for (Font f : fonts) {
             JRadioButtonMenuItem fontOpt = new JRadioButtonMenuItem("\t\t\t" + String.valueOf(f.getSize()));
             final Font cf = f;
@@ -118,11 +157,15 @@ public class SwingRunner {
             guiOpts.add(fontOpt);
         }
         JMenuBar menuBar = new JMenuBar();
+
         menuBar.add(guiOpts);
+
         frame.setJMenuBar(menuBar);
 
         setFontRecursively(frame, currentFont);
-        frame.setVisible(true);
+
+        frame.setVisible(
+                true);
     }
 
     private static void setFontRecursively(Component comp, Font font) {
@@ -130,7 +173,7 @@ public class SwingRunner {
             return;
         }
         comp.setFont(font);
-        if (comp instanceof Container container) {
+        if (comp instanceof Container container ) {
             for (Component child : container.getComponents()) {
                 setFontRecursively(child, font);
             }
